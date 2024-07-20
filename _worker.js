@@ -1539,7 +1539,7 @@ async function getAddressescsv(tls) {
 		
 			const ipAddressIndex = 0;// IP地址在 CSV 头部的位置
 			const portIndex = 1;// 端口在 CSV 头部的位置
-			const dataCenterIndex = tlsIndex + 1; // 数据中心是 TLS 的后一个字段
+			const dataCenterIndex = tlsIndex + 3; // 数据中心是 TLS 的后一个字段
 		
 			if (tlsIndex === -1) {
 				console.error('CSV文件缺少必需的字段');
