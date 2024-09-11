@@ -70,6 +70,7 @@ let addressesnotls = [
 let addressesnotlsapi = [];
 let addressescsv = [];
 let DLS = 8;
+let ReName = 'CM-EDT#';
 let FileName = 'edgetunnel';
 let BotToken ='';
 let ChatID =''; 
@@ -136,6 +137,7 @@ export default {
 			if (env.ADDNOTLSAPI) addressesnotlsapi = await ADD(env.ADDNOTLSAPI);
 			if (env.ADDCSV) addressescsv = await ADD(env.ADDCSV);
 			DLS = env.DLS || DLS;
+			ReName = env.RENAME || ReName;
 			BotToken = env.TGTOKEN || BotToken;
 			ChatID = env.TGID || ChatID; 
 			if(env.GO2SOCKS5) go2Socks5s = await ADD(env.GO2SOCKS5);
@@ -1639,7 +1641,7 @@ async function getAddressescsv(tls) {
 			
 			const ipAddressIndex = 0;// IP地址在 CSV 头部的位置
 			const portIndex = 1;// 端口在 CSV 头部的位置
-			const dataCenterIndex = tlsIndex + 1; // 数据中心是 TLS 的后一个字段
+			const dataCenterIndex = tlsIndex + 4; // 数据中心是 TLS 的后第四个字段
 		
 			if (tlsIndex === -1) {
 				console.error('CSV文件缺少必需的字段');
@@ -1725,7 +1727,7 @@ function subAddresses(host,UUID,noTLS,newAddressesapi,newAddressescsv,newAddress
 			let 节点备注 = '';
 			const 协议类型 = atob(啥啥啥_写的这是啥啊);
 			
-			const vlessLink = `${协议类型}://${UUID}@${address}:${port}?encryption=none&security=&type=ws&host=${伪装域名}&path=${encodeURIComponent(最终路径)}#${encodeURIComponent(addressid + 节点备注)}`;
+			const vlessLink = `${协议类型}://${UUID}@${address}:${port}?encryption=none&security=&type=ws&host=${伪装域名}&path=${encodeURIComponent(最终路径)}#${encodeURIComponent(ReName + addressid + 节点备注)}`;
 	
 			return vlessLink;
 
@@ -1788,7 +1790,7 @@ function subAddresses(host,UUID,noTLS,newAddressesapi,newAddressescsv,newAddress
 		}
 		
 		const 协议类型 = atob(啥啥啥_写的这是啥啊);
-		const vlessLink = `${协议类型}://${UUID}@${address}:${port}?encryption=none&security=tls&sni=${伪装域名}&fp=random&type=ws&host=${伪装域名}&path=${encodeURIComponent(最终路径)}#${encodeURIComponent(addressid + 节点备注)}`;
+		const vlessLink = `${协议类型}://${UUID}@${address}:${port}?encryption=none&security=tls&sni=${伪装域名}&fp=random&type=ws&host=${伪装域名}&path=${encodeURIComponent(最终路径)}#${encodeURIComponent(ReName + addressid + 节点备注)}`;
 			
 		return vlessLink;
 	}).join('\n');
