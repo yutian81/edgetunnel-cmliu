@@ -1,3 +1,8 @@
+# 在CM原代码基础上做了两点修改
+- 添加`RENAME`变量，用于在节点名称前添加统一的前缀，例如： RENAME = CF优选
+- 原代码从`ADDCSV`变量获取的节点名称为`数据中心`，此处改为中文的`国家`，对应的[测速工具](https://github.com/bh-qt/Cloudflare-IP-SpeedTest)
+- 本修改不负责维护，一切错误请自行解决。建议用CM大佬的原代码进行搭建
+
 # edgetunnel
 这是一个基于 CF Worker 平台的脚本，在原版的基础上修改了显示 VLESS 配置信息转换为订阅内容。使用该脚本，你可以方便地将 VLESS 配置信息使用在线配置转换到 Clash 或 Singbox 等工具中。
 
