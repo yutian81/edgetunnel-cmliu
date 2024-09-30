@@ -6,7 +6,7 @@ import { connect } from 'cloudflare:sockets';
 // [Windows] Press "Win + R", input cmd and run:  Powershell -NoExit -Command "[guid]::NewGuid()"
 let userID = '90cd4a77-141a-43c9-991b-08263cfe9c10';
 
-let proxyIP = '';// 小白勿动，该地址并不影响你的网速，这是给CF代理使用的。'cdn.xn--b6gac.eu.org, cdn-all.xn--b6gac.eu.org, workers.cloudflare.cyou'
+let proxyIP = '';// 小白勿动，该地址并不影响你的网速，这是给CF代理使用的。'cdn.xn--b6gac.eu.org, cdn-all.xn--b6gac.eu.org'
 
 let sub = '';// 避免项目被滥用，现已取消内置订阅器
 let subconverter = 'SUBAPI.fxxk.dedyn.io';// clash订阅转换后端，目前使用CM的订阅转换功能。自带虚假uuid和host订阅。
@@ -150,13 +150,9 @@ export default {
 				// const url = new URL(request.url);
 				switch (url.pathname.toLowerCase()) {
 				case '/':
-					const envKey = env.URL302 ? 'URL302' : (env.URL ? 'URL' : null);
-					if (envKey) {
-						const URLs = await ADD(env[envKey]);
-						const URL = URLs[Math.floor(Math.random() * URLs.length)];
-						return envKey === 'URL302' ? Response.redirect(URL, 302) : fetch(new Request(URL, request));
-					}
-					return new Response(JSON.stringify(request.cf, null, 4), { status: 200 });
+					if (env.URL302) return Response.redirect(env.URL302, 302);
+					else if (env.URL) return await proxyURL(env.URL, url);
+					else return new Response(JSON.stringify(request.cf, null, 4), { status: 200 });
 				case `/${fakeUserID}`:
 					const fakeConfig = await getVLESSConfig(userID, request.headers.get('Host'), sub, 'CF-Workers-SUB', RproxyIP, url);
 					return new Response(`${fakeConfig}`, { status: 200 });
@@ -210,7 +206,9 @@ export default {
 					}
 				}
 				default:
-					return new Response('Not found', { status: 404 });
+					if (env.URL302) return Response.redirect(env.URL302, 302);
+					else if (env.URL) return await proxyURL(env.URL, url);
+					else return new Response('不用怀疑！你UUID就是错的！！！', { status: 404 });
 				}
 			} else {
 				proxyIP = url.searchParams.get('proxyip') || proxyIP;
@@ -416,7 +414,15 @@ async function handleTCPOutBound(remoteSocket, addressType, addressRemote, portR
 			tcpSocket = await connectAndWrite(addressRemote, portRemote, true);
 		} else {
 			// 否则，尝试使用预设的代理 IP（如果有）或原始地址重试连接
-			if (!proxyIP || proxyIP == '') proxyIP = atob('cHJveHlpcC5meHhrLmRlZHluLmlv');
+			if (!proxyIP || proxyIP == '') {
+				proxyIP = atob('cHJveHlpcC5meHhrLmRlZHluLmlv');
+			} else if (proxyIP.includes(']:')) {
+				portRemote = proxyIP.split(']:')[1] || portRemote;
+				proxyIP = proxyIP.split(']:')[0] || proxyIP;
+			} else if (proxyIP.split(':').length === 2) {
+				portRemote = proxyIP.split(':')[1] || portRemote;
+				proxyIP = proxyIP.split(':')[0] || proxyIP;
+			}
 			tcpSocket = await connectAndWrite(proxyIP || addressRemote, portRemote);
 		}
 		// 无论重试是否成功，都要关闭 WebSocket（可能是为了重新建立连接）
@@ -1195,6 +1201,46 @@ async function ADD(envadd) {
 	const add = addtext.split(',');
 	
 	return add;
+}
+
+async function proxyURL(proxyURL, url) {
+	const URLs = await ADD(proxyURL);
+	const fullURL = URLs[Math.floor(Math.random() * URLs.length)];
+
+	// 解析目标 URL
+	let parsedURL = new URL(fullURL);
+	console.log(parsedURL);
+	// 提取并可能修改 URL 组件
+	let URLProtocol = parsedURL.protocol.slice(0, -1) || 'https';
+	let URLHostname = parsedURL.hostname;
+	let URLPathname = parsedURL.pathname;
+	let URLSearch = parsedURL.search;
+
+	// 处理 pathname
+	if (URLPathname.charAt(URLPathname.length - 1) == '/') {
+		URLPathname = URLPathname.slice(0, -1);
+	}
+	URLPathname += url.pathname;
+
+	// 构建新的 URL
+	let newURL = `${URLProtocol}://${URLHostname}${URLPathname}${URLSearch}`;
+
+	// 反向代理请求
+	let response = await fetch(newURL);
+
+	// 创建新的响应
+	let newResponse = new Response(response.body, {
+		status: response.status,
+		statusText: response.statusText,
+		headers: response.headers
+	});
+
+	// 添加自定义头部，包含 URL 信息
+	//newResponse.headers.set('X-Proxied-By', 'Cloudflare Worker');
+	//newResponse.headers.set('X-Original-URL', fullURL);
+	newResponse.headers.set('X-New-URL', newURL);
+
+	return newResponse;
 }
 
 function checkSUB(host) {
