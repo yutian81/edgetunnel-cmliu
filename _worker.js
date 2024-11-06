@@ -72,9 +72,9 @@ let addressesnotls = [
 ];
 let addressesnotlsapi = [];
 let addressescsv = [];
-let DLS = 8;
-let ReName = '';
-let FileName = 'edgetunnel';
+let DLS = 5;
+let ReName = 'CF优选🚀';
+let FileName = 'cm-edt';
 let BotToken ='';
 let ChatID =''; 
 let proxyhosts = [];//本地代理域名池
