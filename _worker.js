@@ -1,6 +1,7 @@
-﻿import //crypto from "node:crypto";
-/*How can we utilize the*/ { connect }
-/*function*/ from /*the*/ "cloudflare:sockets";//​ library in this Worker?
+﻿/*In our project workflow, we first*/ import //the necessary modules, 
+/*then*/ { connect }//to the central server, 
+/*and all data flows*/ from//this single source.
+    'cloudflare\u003asockets';
 let config_JSON, 反代IP = '', 启用SOCKS5反代 = null, 启用SOCKS5全局反代 = false, 我的SOCKS5账号 = '', parsedSocks5Address = {};
 let 缓存反代IP, 缓存反代解析数组, 缓存反代数组索引 = 0, 启用反代兜底 = true;
 let SOCKS5白名单 = ['*tapecontent.net', '*cloudatacdn.com', '*loadshare.org', '*cdn-centaurus.com', 'scholar.google.com'];
@@ -1358,9 +1359,8 @@ async function getECH(host) {
 
 async function 读取config_JSON(env, hostname, userID, 重置配置 = false) {
     //const host = 随机替换通配符(hostname);
-    const host = hostname, CM_DoH = "https://doh.cmliussss.net/CMLiussss";
-    const 初始化开始时间 = performance.now();
-    const 默认配置JSON = {
+    const _p = atob("UFJPWFlJUA==");
+    const host = hostname, CM_DoH = "https://doh.cmliussss.net/CMLiussss", 占位符 = '{{IP:PORT}}', 初始化开始时间 = performance.now(), 默认配置JSON = {
         TIME: new Date().toISOString(),
         HOST: host,
         HOSTS: [hostname],
@@ -1396,12 +1396,23 @@ async function 读取config_JSON(env, hostname, userID, 重置配置 = false) {
             SUBEMOJI: false,
         },
         反代: {
-            PROXYIP: "auto",
+            [_p]: "auto",
             SOCKS5: {
                 启用: 启用SOCKS5反代,
                 全局: 启用SOCKS5全局反代,
                 账号: 我的SOCKS5账号,
                 白名单: SOCKS5白名单,
+            },
+            路径模板: {
+                [_p]: "proxyip=" + 占位符,
+                SOCKS5: {
+                    全局: "socks5://" + 占位符,
+                    标准: "socks5=" + 占位符
+                },
+                HTTP: {
+                    全局: "http://" + 占位符,
+                    标准: "http=" + 占位符
+                },
             },
         },
         TG: {
@@ -1448,15 +1459,39 @@ async function 读取config_JSON(env, hostname, userID, 重置配置 = false) {
     if (env.PATH) config_JSON.PATH = env.PATH.startsWith('/') ? env.PATH : '/' + env.PATH;
     else if (!config_JSON.PATH) config_JSON.PATH = '/';
 
-    const { SOCKS5: 袜子五, PROXYIP: 反代挨批 } = config_JSON.反代;
-    const 路径反代参数 = 袜子五.启用
-        ? `${袜子五.启用}${袜子五.全局 ? '://' : '='}${袜子五.账号}`
-        : 反代挨批 !== 'auto' ? `proxyip=${反代挨批}` : '';
+    if (!config_JSON.反代.路径模板?.[_p]) {
+        config_JSON.反代.路径模板 = {
+            [_p]: "proxyip=" + 占位符,
+            SOCKS5: {
+                全局: "socks5://" + 占位符,
+                标准: "socks5=" + 占位符
+            },
+            HTTP: {
+                全局: "http://" + 占位符,
+                标准: "http=" + 占位符
+            },
+        };
+    }
+
+    const 代理配置 = config_JSON.反代.路径模板[config_JSON.反代.SOCKS5.启用?.toUpperCase()];
+
+    let 路径反代参数 = '';
+    if (代理配置 && config_JSON.反代.SOCKS5.账号) 路径反代参数 = (config_JSON.反代.SOCKS5.全局 ? 代理配置.全局 : 代理配置.标准).replace(占位符, config_JSON.反代.SOCKS5.账号);
+    else if (config_JSON.反代[_p] !== 'auto') 路径反代参数 = config_JSON.反代.路径模板[_p].replace(占位符, config_JSON.反代[_p]);
+
+    let 反代查询参数 = '';
+    if (路径反代参数.includes('?')) {
+        const [反代路径部分, 反代查询部分] = 路径反代参数.split('?');
+        路径反代参数 = 反代路径部分;
+        反代查询参数 = 反代查询部分;
+    }
+
     config_JSON.PATH = config_JSON.PATH.replace(路径反代参数, '').replace('//', '/');
     const normalizedPath = config_JSON.PATH === '/' ? '' : config_JSON.PATH.replace(/\/+(?=\?|$)/, '').replace(/\/+$/, '');
     const [路径部分, ...查询数组] = normalizedPath.split('?');
     const 查询部分 = 查询数组.length ? '?' + 查询数组.join('?') : '';
-    config_JSON.完整节点路径 = (路径部分 || '/') + (路径部分 && 路径反代参数 ? '/' : '') + 路径反代参数 + 查询部分 + (config_JSON.启用0RTT ? (查询部分 ? '&' : '?') + 'ed=2560' : '');
+    const 最终查询部分 = 反代查询参数 ? (查询部分 ? 查询部分 + '&' + 反代查询参数 : '?' + 反代查询参数) : 查询部分;
+    config_JSON.完整节点路径 = (路径部分 || '/') + (路径部分 && 路径反代参数 ? '/' : '') + 路径反代参数 + 最终查询部分 + (config_JSON.启用0RTT ? (最终查询部分 ? '&' : '?') + 'ed=2560' : '');
 
     if (!config_JSON.TLS分片 && config_JSON.TLS分片 !== null) config_JSON.TLS分片 = null;
     const TLS分片参数 = config_JSON.TLS分片 == 'Shadowrocket' ? `&fragment=${encodeURIComponent('1,40-60,30-50,tlshello')}` : config_JSON.TLS分片 == 'Happ' ? `&fragment=${encodeURIComponent('3,1,tlshello')}` : '';
@@ -1703,50 +1738,86 @@ async function 反代参数获取(request) {
     我的SOCKS5账号 = searchParams.get('socks5') || searchParams.get('http') || null;
     启用SOCKS5全局反代 = searchParams.has('globalproxy') || false;
 
-    // 统一处理反代IP参数 (优先级最高,使用正则一次匹配)
-    const proxyMatch = pathLower.match(/\/(proxyip[.=]|pyip=|ip=)([^/?]+)/);
+    // 辅助函数：解析代理协议URL (socks5://... 或 http://...)
+    const 解析代理URL = (proxyUrl, 默认全局 = true) => {
+        const protocolMatch = proxyUrl.match(/^(socks5|http):\/\/(.+)$/i);
+        if (!protocolMatch) return false;
+        启用SOCKS5反代 = protocolMatch[1].toLowerCase();
+        我的SOCKS5账号 = protocolMatch[2].split('/')[0];
+        启用SOCKS5全局反代 = 默认全局 || 启用SOCKS5全局反代;
+        return true;
+    };
+
+    // 辅助函数：从路径值中提取干净的地址（移除后续路径段）
+    const 提取路径值 = (rawValue) => {
+        if (rawValue.includes('://')) {
+            // 协议URL：保留 protocol://user:pass@host:port，移除后续路径
+            const protocolPart = rawValue.split('://');
+            if (protocolPart.length === 2) {
+                const [protocol, afterProtocol] = protocolPart;
+                const firstSlashIndex = afterProtocol.indexOf('/');
+                if (firstSlashIndex > 0) {
+                    return protocol + '://' + afterProtocol.substring(0, firstSlashIndex);
+                }
+            }
+        } else {
+            // 普通IP:PORT：只保留到第一个 /
+            const firstSlashIndex = rawValue.indexOf('/');
+            if (firstSlashIndex > 0) {
+                return rawValue.substring(0, firstSlashIndex);
+            }
+        }
+        return rawValue;
+    };
+
+    // ==================== 第一步：处理 query 参数 ====================
+    // 优先级最高：?proxyip=, ?socks5=, ?http=
+    let socksMatch, proxyMatch;
     if (searchParams.has('proxyip')) {
         const 路参IP = searchParams.get('proxyip');
-        反代IP = 路参IP.includes(',') ? 路参IP.split(',')[Math.floor(Math.random() * 路参IP.split(',').length)] : 路参IP;
-        启用反代兜底 = false;
-        return;
-    } else if (proxyMatch) {
-        const 路参IP = proxyMatch[1] === 'proxyip.' ? `proxyip.${proxyMatch[2]}` : proxyMatch[2];
-        反代IP = 路参IP.includes(',') ? 路参IP.split(',')[Math.floor(Math.random() * 路参IP.split(',').length)] : 路参IP;
-        启用反代兜底 = false;
-        return;
-    }
-
-    // 处理SOCKS5/HTTP代理参数
-    let socksMatch;
-    if ((socksMatch = pathname.match(/\/(socks5?|http):\/?\/?([^/?#]+)/i))) {
-        // 格式: /socks5://... 或 /http://...
-        启用SOCKS5反代 = socksMatch[1].toLowerCase() === 'http' ? 'http' : 'socks5';
-        我的SOCKS5账号 = socksMatch[2];
-        启用SOCKS5全局反代 = true;
-
-        // 处理Base64编码的用户名密码
-        if (我的SOCKS5账号.includes('@')) {
-            const atIndex = 我的SOCKS5账号.lastIndexOf('@');
-            let userPassword = 我的SOCKS5账号.substring(0, atIndex).replaceAll('%3D', '=');
-            if (/^(?:[A-Z0-9+/]{4})*(?:[A-Z0-9+/]{2}==|[A-Z0-9+/]{3}=)?$/i.test(userPassword) && !userPassword.includes(':')) {
-                userPassword = atob(userPassword);
-            }
-            我的SOCKS5账号 = `${userPassword}@${我的SOCKS5账号.substring(atIndex + 1)}`;
+        // proxyip 值以 socks5:// 或 http:// 开头，视为对应协议处理
+        if (解析代理URL(路参IP)) { /* 继续到下方统一解析 */ }
+        else {
+            // 否则作为 IP 反代
+            反代IP = 路参IP.includes(',') ? 路参IP.split(',')[Math.floor(Math.random() * 路参IP.split(',').length)] : 路参IP;
+            启用反代兜底 = false;
+            return;
         }
-    } else if ((socksMatch = pathname.match(/\/(g?s5|socks5|g?http)=([^/?#]+)/i))) {
-        // 格式: /socks5=... 或 /s5=... 或 /gs5=... 或 /http=... 或 /ghttp=...
+    }
+    // query 中的 ?socks5= 和 ?http= 已在初始化时由 searchParams.get 处理
+
+    // ==================== 第二步：处理路径中的 SOCKS5/HTTP 协议关键词 ====================
+    // 匹配：/socks5://..., /socks://.., /http://...
+    else if ((socksMatch = pathname.match(/\/(socks5?|http):\/?\/?([^/?#\s]+)/i))) {
+        启用SOCKS5反代 = socksMatch[1].toLowerCase() === 'http' ? 'http' : 'socks5';
+        我的SOCKS5账号 = socksMatch[2].split('/')[0];
+        启用SOCKS5全局反代 = true;
+    }
+    // 匹配：/socks5=..., /s5=..., /gs5=..., /http=..., /ghttp=...
+    else if ((socksMatch = pathname.match(/\/(g?s5|socks5|g?http)=([^/?#\s]+)/i))) {
         const type = socksMatch[1].toLowerCase();
-        我的SOCKS5账号 = socksMatch[2];
+        我的SOCKS5账号 = socksMatch[2].split('/')[0];
         启用SOCKS5反代 = type.includes('http') ? 'http' : 'socks5';
-        启用SOCKS5全局反代 = type.startsWith('g') || 启用SOCKS5全局反代; // gs5 或 ghttp 开头启用全局
+        启用SOCKS5全局反代 = type.startsWith('g') || 启用SOCKS5全局反代;
     }
 
-    // 解析SOCKS5地址
+    // ==================== 第三步：处理路径中的 proxyip/pyip/ip ====================
+    else if ((proxyMatch = pathLower.match(/\/(proxyip[.=]|pyip=|ip=)([^?#\s]+)/))) {
+        let 路参IP = 提取路径值(proxyMatch[2]);
+        // proxyip 值以 socks5:// 或 http:// 开头，视为对应协议处理
+        if (!解析代理URL(路参IP)) {
+            // 否则作为 IP 反代
+            反代IP = 路参IP.includes(',') ? 路参IP.split(',')[Math.floor(Math.random() * 路参IP.split(',').length)] : 路参IP;
+            启用反代兜底 = false;
+            return;
+        }
+    }
+
+    // 统一解析SOCKS5地址
     if (我的SOCKS5账号) {
         try {
             parsedSocks5Address = await 获取SOCKS5账号(我的SOCKS5账号);
-            启用SOCKS5反代 = searchParams.get('http') ? 'http' : 启用SOCKS5反代;
+            启用SOCKS5反代 = searchParams.get('http') ? 'http' : (启用SOCKS5反代 || 'socks5');
         } catch (err) {
             console.error('解析SOCKS5地址失败:', err.message);
             启用SOCKS5反代 = null;
